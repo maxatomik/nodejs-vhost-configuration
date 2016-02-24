@@ -1,0 +1,235 @@
+#!/bin/bash
+
+create-project-usage() {
+cat <<"USAGE"
+Usage:project [OPTIONS] <name>
+	-h, --help        		show this help screen
+	install     	  		install NPM PACKAGES
+	uninstall    	  		uninstall NPM PACKAGES
+	vhost (create,delete)   vhost builder
+	grunt (command) 		grunt command
+	server 				    start expressjs server
+
+Examples:
+	project foo
+	project foo action
+
+USAGE
+exit 0
+}
+
+
+project-vhost() {
+	host_file=$HOSTS_FILE
+	vhost_dir=$APACHE_DIR'/node_vhosts/'
+	url="$name.dev"
+	docroot=$WORKING_DIRECTORY'/'$name
+	echo $HOSTS_FILE
+	echo $APACHE_DIR
+	echo $WORKING_DIRECTORY
+	if [ "$action" = "create" ]; then
+		git clone git@gitlab.marceldev.fr:labs/boilerplate_bbone_rjs_expressjs.git $name
+		cd $name
+		git remote set-url origin git@gitlab.marceldev.fr:website/$name.git
+		cp ecosystem.json.default ecosystem.json
+		cp web/config/server.json.default web/config/server.json
+
+		read -p "${green}WEB PORT ${red}(3000)${reset} : " pw
+		if [ -z "$pw" ]; then
+		    pw=3000
+		fi
+
+		read -p "${green}API PORT (REST API) ${red}(3200)${reset} : " pa
+		if [ -z "$pa" ]; then
+		    pa=3200
+		fi
+
+		read -p "${green}SOCIAL PORT (oAUTH) ${red}(3300)${reset} : " ps
+		if [ -z "$ps" ]; then
+		    ps=3300
+		fi
+		echo -e "\nCreating the new $name Virtual Host with DocumentRoot: $docroot"
+
+        if [ "$CurOS" = "mac" ]; then
+            sed -e 's/\$BASEURL/'$url'/g' -i ''  web/config/server.json
+            sed -e 's/\$DOMAIN/'$url'/g'  -i '' ecosystem.json
+            sed -e 's/\$DATABASE/'$name'/g'  -i '' ecosystem.json
+            sed -e 's/\$PORTWEB/'$pw'/g'  -i '' ecosystem.json
+            sed -e 's/\$PORTAPP/'$pa'/g'  -i '' ecosystem.json
+            sed -e 's/\$PORTSOCIAL/'$ps'/g'  -i '' ecosystem.json
+        fi
+        if [ "$CurOS" = "pc" ]; then
+            sed -i -e  's/\$BASEURL/'$url'/g' web/config/server.json
+            sed -i -e  's/\$DOMAIN/'$url'/g' ecosystem.json
+            sed -i -e  's/\$DATABASE/'$name'/g' ecosystem.json
+            sed -i -e  's/\$PORTWEB/'$pw'/g' ecosystem.json
+            sed -i -e  's/\$PORTAPP/'$pa'/g' ecosystem.json
+            sed -i -e  's/\$PORTSOCIAL/'$ps'/g' ecosystem.json
+        fi
+
+
+
+
+
+
+		echo 'VHOST CONFIGURATION (httpd.conf)'
+		path=`pwd`
+		echo '*************************************'
+		echo '<VirtualHost '$url':80>'
+		echo 'ServerName '$url
+		echo 'DocumentRoot "'$docroot'/web/www/"'
+		echo 'ProxyPass / http://localhost:'$pw'/'
+		echo 'ProxyPassReverse / http://localhost:'$pw'/'
+		echo 'ProxyPreserveHost On'
+		echo '</VirtualHost>'
+		echo '*************************************'
+		echo 'DO NOT FORGET TO EDIT HOSTS FILE (hosts)'
+		echo '*************************************'
+		echo '127.0.0.1 '$url
+		echo '*************************************'
+
+
+		#sudo apachectl restart
+		if [ "$CurOS" = "mac" ]; then
+			sudo cp scripts/template $vhost_dir$name.conf
+			sudo sed -e 's/template.name/'$name'/g' -i '' $vhost_dir$name.conf
+			sudo sed -e 's/template.port/'$pw'/g' -i '' $vhost_dir$name.conf
+			sudo sed -e 's#template.docroot#'$docroot'#g' -i ''  $vhost_dir$name.conf
+			sudo sed -e 's/template.url/'$url'/g' -i '' $vhost_dir$name.conf
+			echo "Adding $url to the $host_file file..."
+			sudo sed -e '/'$url'/d' -i '' $host_file
+			sudo -- sh -c "echo '127.0.0.1 '$url >> '$host_file'"
+
+			echo 'Restart Apache'
+		fi
+		if [ "$CurOS" = "pc" ]; then
+			cp scripts/template $vhost_dir$name.conf
+			sed -i -e 's/template.name/'$name'/g' $vhost_dir$name.conf
+			sed -i -e 's/template.port/'$pw'/g' $vhost_dir$name.conf
+			sed -i -e 's#template.docroot#'$docroot'#g'  $vhost_dir$name.conf
+			sed -i -e 's/template.url/'$url'/g' $vhost_dir$name.conf
+			echo "Adding $url to the $host_file file..."
+			sed -i -e '/'$url'/d' $host_file
+			echo '127.0.0.1 '$url >> $host_file
+			#sudo apachectl restart
+			echo 'Restart Apache'
+		fi
+
+	fi
+	if [ "$action" = "delete" ]; then
+
+		if [ "$CurOS" = "mac" ]; then
+			sudo -v
+			echo "Removing $url from $host_file."
+			sudo sed -e '/'$url'/d' -i '' $host_file
+
+			echo "Disabling and deleting the $name virtual host."
+			sudo rm $vhost_dir$name.conf
+		fi
+		if [ "$CurOS" = "pc" ]; then
+			echo "Removing $url from $host_file."
+			sed -i -e '/'$url'/d' $host_file
+			echo "Disabling and deleting the $name virtual host."
+			rm $vhost_dir$name.conf
+		fi
+		#sudo apachectl restart
+
+		echo "Project has been removed. The document root still exists."
+		exit 0
+	fi
+
+
+
+	exit 0
+}
+
+project-install() {
+	echo '*************************************'
+	echo '*   DO NOT FORGET MONGODB INSTALL   *'
+	echo '*      AND NPM GLOBAL PACKAGES      *'
+	echo '*************************************'
+	cd src/NodeJS
+	echo '*************************************'
+	echo '* INSTALLING EXPRESSJS NPM PACKAGES *'
+	echo '*************************************'
+	npm install
+	cd ../../web/config
+	echo '*************************************'
+	echo '*  INSTALLING BACKBONE NPM PACKAGES *'
+	echo '*************************************'
+	npm install
+	grunt
+	cd ../..
+	echo '*************************************'
+	echo '*               DONE                *'
+	echo '*************************************'
+	exit 0
+}
+
+
+project-server() {
+	echo '**********************************************************'
+	echo '*     RUNNING APP (configuration in ecosystem.json)      *'
+	echo '**********************************************************'
+	echo "Server starting..."
+	touch src/NodeJS/logs/mongodb.log
+	mongod --fork --logpath src/NodeJS/logs/mongodb.log
+	pm2 kill
+	pm2 start ecosystem.json --env "$env"
+	pm2 flush
+	pm2 logs
+	exit 0
+}
+
+project-grunt() {
+	echo "grunt-command executing"
+	cd web/config
+	grunt $cmd
+	cd ../..
+	exit 0
+}
+
+
+project-uninstall() {
+	echo '*************************************'
+	echo '*            NPM DELETE             *'
+	echo '*************************************'
+	cd src/NodeJS
+	rm -rf node_modules
+	cd ../../web/config
+	rm -rf node_modules
+	cd ../..
+	echo '*************************************'
+	echo '*               DONE                *'
+	echo '*************************************'
+	exit 0
+}
+source ~/.bash_profile
+source ~/.bash_profile
+# Loop to read options and arguments.
+while [ $1 ]; do
+	case "$1" in
+		'--help'|'-h')
+			create-project-usage;;
+		'server')
+			env="$2"
+			if [ -z "$2" ]; then
+			    env='local'
+			fi
+			project-server;;
+		'vhost')
+			name="$3"
+			action="$2"
+			project-vhost;;
+		'grunt')
+			cmd="$2"
+			project-grunt;;
+		'install')
+			project-install;;
+		'uninstall')
+			project-uninstall;;
+	esac
+	shift
+done
+
+exit 0
