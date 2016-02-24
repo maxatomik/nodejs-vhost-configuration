@@ -1,8 +1,8 @@
 #!/bin/bash
 path=`pwd`
-read -p "MacOS, Windows(1,2): " os
+read -e -p "MacOS, Windows(1,2): " os
 	if [ "$os" = "1" ]; then
-		read -p "hosts file path (/private/etc/hosts): " h
+		read -e -p "hosts file path (/private/etc/hosts): " h
 			cd ~
 			sudo touch .bash_profile
 			if [ -z "$h" ]; then
@@ -14,7 +14,7 @@ read -p "MacOS, Windows(1,2): " os
 			sudo sed -e '/CurOS/d' -i '' .bash_profile 
 			sudo -- sh -c "echo 'export CurOS=mac' >> '.bash_profile'"
 
-		read -p "working directory path (/Users/mborne/Documents/Workspace): " w
+		read -e -p "working directory path (/Users/mborne/Documents/Workspace): " w
 			cd ~
 			sudo touch .bash_profile
 			if [ -z "$w" ]; then
@@ -23,7 +23,7 @@ read -p "MacOS, Windows(1,2): " os
 			sudo sed -e '/WORKING_DIRECTORY/d' -i '' .bash_profile 
 			sudo -- sh -c "echo 'export WORKING_DIRECTORY=$w' >> '.bash_profile'"
 
-		read -p "httpd.conf directory (/private/etc/apache2): " v
+		read -e -p "httpd.conf directory (/private/etc/apache2): " v
 			cd ~
 			if [ -z "$v" ]; then
 				v='/private/etc/apache2'
@@ -40,7 +40,7 @@ read -p "MacOS, Windows(1,2): " os
 	fi
 	if [ "$os" = "2" ]; then
 		cp project /usr/bin/project
-		read -p "hosts file path (/c/Windows/System32/drivers/etc/hosts): " h	
+		read -e -p "hosts file path (/c/Windows/System32/drivers/etc/hosts): " h	
 			if [ -z "$h" ]; then
 				h='/c/Windows/System32/drivers/etc/hosts'
 			fi
@@ -50,14 +50,14 @@ read -p "MacOS, Windows(1,2): " os
 			sed -i -e '/CurOS/d' ~/.bashrc 
 			echo 'export CurOS=pc' >> ~/.bashrc
 
-		read -p "working directory path (/d/Windows/htdocs): " w
+		read -e -p "working directory path (/d/Windows/htdocs): " w
 			if [ -z "$w" ]; then
 				w='/d/Windows/htdocs'
 			fi
 			sed -i -e '/WORKING_DIRECTORY/d' ~/.bashrc 
 			echo 'export WORKING_DIRECTORY='$w >> ~/.bashrc
 
-		read -p "httpd.conf directory (/c/wamp/bin/apache/Apache2.4.4/conf): " v
+		read -e -p "httpd.conf directory (/c/wamp/bin/apache/Apache2.4.4/conf): " v
 			if [ -z "$v" ]; then
 				v='/c/wamp/bin/apache/Apache2.4.4/conf'
 			fi

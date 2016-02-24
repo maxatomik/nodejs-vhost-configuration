@@ -34,17 +34,17 @@ project-vhost() {
 		cp ecosystem.json.default ecosystem.json
 		cp web/config/server.json.default web/config/server.json
 
-		read -p "${green}WEB PORT ${red}(3000)${reset} : " pw
+		read -e -p "${green}WEB PORT ${red}(3000)${reset} : " pw
 		if [ -z "$pw" ]; then
 		    pw=3000
 		fi
 
-		read -p "${green}API PORT (REST API) ${red}(3200)${reset} : " pa
+		read -e -p "${green}API PORT (REST API) ${red}(3200)${reset} : " pa
 		if [ -z "$pa" ]; then
 		    pa=3200
 		fi
 
-		read -p "${green}SOCIAL PORT (oAUTH) ${red}(3300)${reset} : " ps
+		read -e -p "${green}SOCIAL PORT (oAUTH) ${red}(3300)${reset} : " ps
 		if [ -z "$ps" ]; then
 		    ps=3300
 		fi
@@ -206,7 +206,7 @@ project-uninstall() {
 }
 source ~/.bash_profile
 source ~/.bash_profile
-# Loop to read options and arguments.
+# Loop to read -e options and arguments.
 while [ $1 ]; do
 	case "$1" in
 		'--help'|'-h')
