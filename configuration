@@ -1,0 +1,74 @@
+#!/bin/bash
+path=`pwd`
+read -p "MacOS, Windows(1,2): " os
+	if [ "$os" = "1" ]; then
+		read -p "hosts file path (/private/etc/hosts): " h
+			cd ~
+			sudo touch .bash_profile
+			if [ -z "$h" ]; then
+				h='/private/etc/hosts'
+			fi
+			sudo sed -e '/HOSTS_FILE/d' -i '' .bash_profile 
+			sudo -- sh -c "echo 'export HOSTS_FILE=$h' >> '.bash_profile'"
+
+			sudo sed -e '/CurOS/d' -i '' .bash_profile 
+			sudo -- sh -c "echo 'export CurOS=mac' >> '.bash_profile'"
+
+		read -p "working directory path (/Users/mborne/Documents/Workspace): " w
+			cd ~
+			sudo touch .bash_profile
+			if [ -z "$w" ]; then
+				w='/Users/mborne/Documents/Workspace'
+			fi
+			sudo sed -e '/WORKING_DIRECTORY/d' -i '' .bash_profile 
+			sudo -- sh -c "echo 'export WORKING_DIRECTORY=$w' >> '.bash_profile'"
+
+		read -p "httpd.conf directory (/private/etc/apache2): " v
+			cd ~
+			if [ -z "$v" ]; then
+				v='/private/etc/apache2'
+			fi
+			sudo sed -e '/APACHE_DIR/d' -i '' .bash_profile 
+			sudo -- sh -c "echo 'export APACHE_DIR=$v' >> '.bash_profile'"
+			cd $v
+			sudo mkdir -p $v/node_vhosts
+			node_path='$v/node_vhosts'
+			sudo sed -e '/node_vhosts/d' -i '' httpd.conf 
+			sudo -- sh -c "echo 'Include $v/node_vhosts/*' >> '$v/httpd.conf'"
+			sudo cp $path'/'project /usr/bin/project
+			
+	fi
+	if [ "$os" = "2" ]; then
+		read -p "hosts file path (/c/Windows/System32/drivers/etc/hosts): " h	
+			if [ -z "$h" ]; then
+				h='/c/Windows/System32/drivers/etc/hosts'
+			fi
+			sed -i -e '/HOSTS_FILE/d' ~/.bashrc 
+			echo 'export HOSTS_FILE='$h >> ~/.bashrc
+
+			sed -i -e '/HOSTS_FILE/d' ~/.bashrc 
+			echo 'export CurOS=pc' >> ~/.bashrc
+
+		read -p "working directory path (/d/Windows/htdocs): " w
+			if [ -z "$w" ]; then
+				w='/d/Windows/htdocs'
+			fi
+			sed -i -e '/WORKING_DIRECTORY/d' ~/.bashrc 
+			echo 'export WORKING_DIRECTORY='$w >> ~/.bashrc
+
+		read -p "httpd.conf directory (/c/wamp/bin/apache/Apache2.4.4/conf): " v
+			if [ -z "$v" ]; then
+				v='/c/wamp/bin/apache/Apache2.4.4/conf'
+			fi
+			sed -i -e '/APACHE_DIR/d' ~/.bashrc
+			echo 'export APACHE_DIR='$v >> ~/.bashrc
+			cd $v
+			mkdir $v/node_vhosts
+			node_path='$v/node_vhosts'
+			sed -i -e '/node_vhosts/d' httpd.conf 
+			echo 'Include '$v'/node_vhosts/*' >> $v/httpd.conf
+			cp $path'/'project /usr/bin/project
+	fi
+
+
+
