@@ -35,10 +35,11 @@ read -p "MacOS, Windows(1,2): " os
 			node_path='$v/node_vhosts'
 			sudo sed -e '/node_vhosts/d' -i '' httpd.conf 
 			sudo -- sh -c "echo 'Include $v/node_vhosts/*' >> '$v/httpd.conf'"
-			sudo cp $path'/'project /usr/bin/project
+			sudo cp $path'/project' /usr/bin/project
 			
 	fi
 	if [ "$os" = "2" ]; then
+		cp project /usr/bin/project
 		read -p "hosts file path (/c/Windows/System32/drivers/etc/hosts): " h	
 			if [ -z "$h" ]; then
 				h='/c/Windows/System32/drivers/etc/hosts'
@@ -46,7 +47,7 @@ read -p "MacOS, Windows(1,2): " os
 			sed -i -e '/HOSTS_FILE/d' ~/.bashrc 
 			echo 'export HOSTS_FILE='$h >> ~/.bashrc
 
-			sed -i -e '/HOSTS_FILE/d' ~/.bashrc 
+			sed -i -e '/CurOS/d' ~/.bashrc 
 			echo 'export CurOS=pc' >> ~/.bashrc
 
 		read -p "working directory path (/d/Windows/htdocs): " w
@@ -66,8 +67,7 @@ read -p "MacOS, Windows(1,2): " os
 			mkdir $v/node_vhosts
 			node_path='$v/node_vhosts'
 			sed -i -e '/node_vhosts/d' httpd.conf 
-			echo 'Include '$v'/node_vhosts/*' >> $v/httpd.conf
-			cp $path'/'project /usr/bin/project
+			echo 'Include "conf/node_vhosts/*"' >> $v/httpd.conf
 	fi
 
 
