@@ -20,6 +20,7 @@ exit 0
 
 
 project-vhost() {
+
 	host_file=$HOSTS_FILE
 	vhost_dir=$APACHE_DIR'/node_vhosts/'
 	url="$name.dev"
@@ -33,20 +34,23 @@ project-vhost() {
 		git remote set-url origin git@gitlab.marceldev.fr:website/$name.git
 		cp ecosystem.json.default ecosystem.json
 		cp web/config/server.json.default web/config/server.json
-
-		read -e -p "${green}WEB PORT ${red}(3000)${reset} : " pw
+		cd scripts
+		pwport=$(node port-finder.js 2>&1)
+		paport=$(node port-finder.js 2>&1)
+		psport=$(node port-finder.js 2>&1)
+		read -e -p "${green}WEB PORT ${red}($pwport)${reset} : " pw
 		if [ -z "$pw" ]; then
-		    pw=3000
+		    pw=$pwport 
 		fi
 
-		read -e -p "${green}API PORT (REST API) ${red}(3200)${reset} : " pa
+		read -e -p "${green}API PORT (REST API) ${red}($paport)${reset} : " pa
 		if [ -z "$pa" ]; then
-		    pa=3200
+		    pa=$paport
 		fi
 
-		read -e -p "${green}SOCIAL PORT (oAUTH) ${red}(3300)${reset} : " ps
+		read -e -p "${green}SOCIAL PORT (oAUTH) ${red}($paport)${reset} : " ps
 		if [ -z "$ps" ]; then
-		    ps=3300
+		    ps=$psport
 		fi
 		echo -e "\nCreating the new $name Virtual Host with DocumentRoot: $docroot"
 
@@ -172,13 +176,31 @@ project-server() {
 	echo '*     RUNNING APP (configuration in ecosystem.json)      *'
 	echo '**********************************************************'
 	echo "Server starting..."
+	mkdir -p src/NodeJS/logs
 	touch src/NodeJS/logs/mongodb.log
-	mongod --fork --logpath src/NodeJS/logs/mongodb.log
-	pm2 kill
-	pm2 start ecosystem.json --env "$env"
-	pm2 flush
-	pm2 logs
-	exit 0
+
+	mongoishere=$(mongod --version 2>&1)
+	echo $mongoishere
+	if [[ $mongoishere == *"command not found"* ]]
+	then
+		echo 'MONGODB IS NOT CORRECTLY INSTALLED'
+	else
+		mongodout=$(mongod --fork --logpath src/NodeJS/logs/mongodb.log 2>&1)
+		echo $mongodout 
+		if [[ $mongodout == *"error"* ]]
+		then
+			echo 'MONGOD IS ALLREADY RUNNING'
+		fi
+		pm2 kill
+		pm2 start ecosystem.json --env "$env"
+		pm2 flush
+		pm2 logs
+		exit 0
+	fi
+
+
+	
+
 }
 
 project-grunt() {
