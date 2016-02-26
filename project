@@ -28,7 +28,7 @@ project-vhost() {
 	echo $APACHE_DIR
 	echo $WORKING_DIRECTORY
 	if [ "$action" = "create" ]; then
-		git clone git@gitlab.marceldev.fr:labs/boilerplate_bbone_rjs_expressjs.git $name
+		git clone git@gitlab.marceldev.fr:website/boilerplate-backbone-rjs-expressjs.git $name
 		cd $name
 		git remote set-url origin git@gitlab.marceldev.fr:website/$name.git
 		cp ecosystem.json.default ecosystem.json
