@@ -147,6 +147,77 @@ project-vhost() {
 	exit 0
 }
 
+project-init() {
+	read -e -p "Nom du vhost:" name
+		if [ "$name" != "" ]; then
+			sudo cp scripts/site.conf /etc/nginx/sites-available/$name.conf
+			sudo chmod 644 /etc/nginx/sites-available/$name.conf
+			sudo ln -s /etc/nginx/sites-available/$name.conf /etc/nginx/sites-enabled/$name.conf
+
+			sudo sed -i -e  's/template.name/'$name'.dev/g' /etc/nginx/sites-available/$name.conf
+			
+			sudo cp ecosystem.json.default ecosystem.json
+			sudo cp web/config/server.json.default web/config/server.json
+			cd scripts
+			npm install portfinder
+			pwport=$(node port-finder.js 2>&1)
+			paport=$(node port-finder.js 2>&1)
+			psport=$(node port-finder.js 2>&1)
+			read -e -p "${green}WEB PORT ${red}($pwport)${reset} : " pw
+			if [ -z "$pw" ]; then
+				pw=$pwport 
+			fi
+
+			read -e -p "${green}API PORT (REST API) ${red}($paport)${reset} : " pa
+			if [ -z "$pa" ]; then
+				pa=$paport
+			fi
+
+			read -e -p "${green}SOCIAL PORT (oAUTH) ${red}($psport)${reset} : " ps
+			if [ -z "$ps" ]; then
+				ps=$psport
+			fi
+
+			sudo sed -i -e  's/template.port/'$pw'/g'  /etc/nginx/sites-available/$name.conf
+			
+			cd ..
+
+			sudo sed -i -e 's/\$BASEURL/'$name'.dev/g'  web/config/server.json
+			sudo sed -i -e 's/\$DOMAIN/'$name'.dev/g' ecosystem.json
+			sudo sed -i -e 's/\$DATABASE/'$name'/g' ecosystem.json
+			sudo sed -i -e 's/\$PORTWEB/'$pw'/g' ecosystem.json
+			sudo sed -i -e 's/\$PORTAPP/'$pa'/g' ecosystem.json
+			sudo sed -i -e 's/\$PORTSOCIAL/'$ps'/g' ecosystem.json
+
+			echo '*************************************'
+			echo '*   DO NOT FORGET MONGODB INSTALL   *'
+			echo '*      AND NPM GLOBAL PACKAGES      *'
+			echo '*************************************'
+			cd src/NodeJS
+			echo '*************************************'
+			echo '* INSTALLING EXPRESSJS NPM PACKAGES *'
+			echo '*************************************'
+			npm install
+			cd ../../web/config
+			echo '*************************************'
+			echo '*  INSTALLING BACKBONE NPM PACKAGES *'
+			echo '*************************************'
+			npm install
+			grunt
+			cd ../..
+			echo '*************************************'
+			echo '*               DONE                *'
+			echo '*************************************'
+			exit 0
+
+			sudo service nginx restart
+			exit 0
+
+		fi
+
+	
+}
+
 project-install() {
 	echo '*************************************'
 	echo '*   DO NOT FORGET MONGODB INSTALL   *'
@@ -247,6 +318,8 @@ while [ $1 ]; do
 			cmd="$2"
 			project-grunt;;
 		'install')
+			project-install;;
+		'init')
 			project-install;;
 		'uninstall')
 			project-uninstall;;
